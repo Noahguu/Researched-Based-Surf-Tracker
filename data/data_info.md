@@ -2,7 +2,7 @@
 
 ## NOAA bouy NDBC station 46237 for 2025
 
-### Link: https://www.ndbc.noaa.gov/view_text_file.php?filename=46237h2025.txt.gz&dir=data/historical/stdmet/
+### Link: https://www.ndbc.noaa.gov/view_text_file.php?filename=46274h2025.txt.gz&dir=data/historical/stdmet/
 
 ### Provides:
 - Day, month, time for every 30 minutes (In UTC)
@@ -22,7 +22,7 @@
 
 ## NOAA tides and current tracker station 9414290 for 2025
 
-### Link: https://tidesandcurrents.noaa.gov/waterlevels.html?id=9414290&units=standard&bdate=20250101&edate=20251231&timezone=GMT&datum=MLLW&interval=h&action=
+### Link: https://tidesandcurrents.noaa.gov/waterlevels.html?id=9410230&bdate=20250101&edate=20251231&units=standard&timezone=GMT&interval=h
 
 ### Provides: 
 - Day, month, time for every 1 hour
@@ -39,7 +39,7 @@
 
 ## Open Metro historical wind data
 
-### Link: https://open-meteo.com/en/docs/historical-weather-api?utm_source=chatgpt.com&hourly=wind_speed_10m,wind_direction_10m&start_date=2025-01-01&end_date=2025-12-31&latitude=37.7557&longitude=-122.5065&timezone=auto
+### Link: https://open-meteo.com/en/docs/historical-weather-api?utm_source=chatgpt.com&hourly=wind_speed_10m,wind_direction_10m&start_date=2025-01-01&end_date=2025-12-31&latitude=33.063000&longitude=-117.304000&timezone=auto
 
 ### Provides:
 - Wind speed
