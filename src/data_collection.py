@@ -6,6 +6,9 @@ import pandas as pd
 import openmeteo_requests
 import numpy as np
 
+import random
+import sys
+
 # """
 # First chunk: Converts NOAA Bouy data from website into useable data w/ standard timestamp
 # Second chunk: 
@@ -163,6 +166,7 @@ wind = pd.DataFrame(
         name="timestamp",
     ),
 )
+
  # ---------------------------------------------------------------------------
 # 3. NOAA CO-OPS tide gauge (time_zone=GMT, so already UTC)
 #    The API allows at most 1 year per request for hourly_height.
@@ -201,7 +205,77 @@ data = wind.join([buoy_hourly, tide], how="left")
 # Convert to local time at the end (tz-aware, so DST is handled correctly)
 data.index = data.index.tz_convert(LOCAL_TZ)
 
- 
-print(data.head())
-print(f"\n{len(data)} hours total")
-print("Missing values per column:\n", data.isna().sum())
+BEACH_FACING = 249
+
+rel = np.deg2rad((data["wind_direction_10m"] - BEACH_FACING) % 360)
+data["wind_offshore"] = -data["wind_speed_10m"] * np.cos(rel)  # + = offshore, - = onshore
+data["wind_cross"]    =  abs(data["wind_speed_10m"] * np.sin(rel))  # sideways component
+
+data = data.drop(["wind_speed_10m", "wind_direction_10m"], axis=1)
+
+# print(data.sample(n=20))
+# print(f"\n{len(data)} hours total")
+# print("Missing values per column:\n", data.isna().sum())
+
+
+
+
+
+
+"""
+
+Dataset!!! (And my general grading guidelines):
+
+- Swell Angle:
+    Best	270°-285° (W to WNW)	Hits the reef head-on. Creates perfectly shaped, peeling A-frame peaks with clean rights and lefts. Handles size well.
+    Second Best	285°-300° (WNW to NW)	Punchy and consistent winter swell angle. Can get a bit sectiony or walled up, but offers fast, fun rights.
+    Average	210°-240° (SW to WSW)	Soft, slower, and cleaner lines. Fun for longboarding and mid-lengths, but lacks the hollow punch of a western groundswell.
+    Second Worst	200°-210° (SSW)	Heavily shadowed and blocked by the Channel Islands. Mostly small, inconsistent, and mushy lines sneak through.
+    Worst	180°-199° (S to SSW) & 305°+ (Deep NW)	Fully blocked or shadowed. South swells under 200° completely miss the reef, while deep NW swells pass too far offshore or get blocked by Point Conception.
+(The rest I know well enough to keep broad)
+- Swell height: above 0.9 is ideal, lower is pretty meh unless period is higher than like 15
+- Dominant period needs to be above 10, above 14 is quite good and 18+ is GOOD surf unless wind sucksssss
+- Wind should be as low as possible if onshore, and up to like 10 if offshore. Side winds minimal.
+- Ideal tide is between 0.5-2.5 feet. High high tide much worse than low low tide unless high period then both fine
+
+"""
+
+
+
+"""
+Code to get my data:
+input - data
+
+output - one random data piece for each day of the year of data
+"""
+
+SEED = 57295
+TIME_COL = "timestamp"
+
+def one_data_per_day(df: pd.DataFrame, time_col=TIME_COL, seed=SEED):
+   
+    samples = df.groupby(df.index.date, group_keys=False).sample(n=1, random_state=seed).sort_index()
+    return samples
+
+def make_swell_direction_easy(df: pd.DataFrame):
+    df["MWD"] = df["MWD"].apply(check_direction)
+    return df
+
+def check_direction(direction: int):
+    if direction < 200:
+        return 'Worst'
+    elif direction < 225:
+        return 'Second worst'
+    elif direction < 255:
+        return 'Average'
+    elif direction < 280:
+        return 'Best'
+    return 'Second best'
+
+
+samples = one_data_per_day(make_swell_direction_easy(data))
+samples = samples.rename(columns={"WVHT": "WVHT_ft"})
+samples["WVHT_ft"] = (samples["WVHT_ft"] * 3.281).round(1)   # NOAA gives meters; feet are easier to judge
+samples["rating"] = ""
+# samples.to_csv("data/to_rate.csv")
+
