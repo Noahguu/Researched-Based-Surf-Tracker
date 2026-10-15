@@ -18,3 +18,10 @@ The long term goal is to have a system where a user can input a specific locatio
 
 ## Planned Development
 Literally everything else is "To Be Developed" -> (TBD)
+
+## Running the data pipeline
+```
+pip install -r requirements.txt
+python src/data_collection.py   # fetches 2025 buoy, wind and tide data, writes data/merged_2025.csv
+pytest                          # offline tests, no network needed
+```

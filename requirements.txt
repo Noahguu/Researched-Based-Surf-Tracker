@@ -1,0 +1,4 @@
+numpy>=2.0
+pandas>=2.2
+openmeteo-requests>=1.3
+pytest>=8.0
