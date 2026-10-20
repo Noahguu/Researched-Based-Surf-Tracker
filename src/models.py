@@ -25,10 +25,10 @@ DIRECTION_POINTS = {"Worst": -2, "Second worst": -1, "Average": 0,
 def generic_model(row):
     score = np.interp(row["WVHT_ft"], [1, 1.5, 2.3, 3.4, 4.5], [1, 3, 5, 7, 8])
     score += np.interp(row["wind_offshore"], [-10, -5, 0, 5, 10], [-4, -2, 0, 2, 1])
-    score += np.interp(row["wind_cross"], [10, 6, 4, 0], [-2, -1, 0, 0.5])
+    score += np.interp(row["wind_cross"], [0, 4, 6, 10], [0.5, 0, -1, -2])
     score += np.interp(row["DPD"], [7, 10, 13, 17], [-3, -1, 1, 2])
     score += 0.5 if row["APD"] >= 7 else -0.5
-    score += np.interp(row["tide_ft"], [3.5, 3, 2.4, 1.2, 0.5, -0.8, -1.5], [-2, -1, 0, 1, 1, -1, -1.5])
+    score += np.interp(row["tide_ft"], [-1.5, -0.8, 0.5, 1.2, 2.4, 3, 3.5], [-1.5, -1, 1, 1, 0, -1, -2])
     score += DIRECTION_POINTS.get(row["MWD"])
 
     if row["WVHT_ft"] < 1:

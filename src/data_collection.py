@@ -184,4 +184,3 @@ samples = one_data_per_day(make_stuff_easy(data))
 samples["rating"] = ""
 
 
-
