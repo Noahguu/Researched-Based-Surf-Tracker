@@ -5,7 +5,39 @@ import numpy as np
 import random
 
 
+from sklearn.model_selection import RepeatedKFold, cross_val_score
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+# Models being used:
+from sklearn.gaussian_process.kernels import RBF, WhiteKernel
+from sklearn.linear_model import Ridge
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.neural_network import MLPRegressor
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.gaussian_process import GaussianProcessRegressor
+from xgboost import XGBRegressor
+from tabpfn import TabPFNRegressor
+
 DATA = make_stuff_easy(load_data())
+
+
+
+
+
+"""
+Baseline model:
+
+Always returns the average score for all of the scores from my data set
+"""
+def average(df: pd.Series):
+    return f"A mean of {df.mean(numeric_only=True)} and an S.D. of {df.std(numeric_only=True)}"
+
+
+
+# ------------------------------------- #
+
+
+
 
 """
 Generic model:
@@ -35,5 +67,65 @@ def generic_model(row):
         score = min(score, 2)
     return float(np.clip(score, 0, 10))
 
-print(generic_model(DATA.iloc[1]))
+# print(generic_model(DATA.iloc[1]))
 
+
+
+
+# ------------------------------------- #
+
+
+
+"""
+Makes the models and sets parameters; places them in dictionary
+"""
+def make_models():
+    model_dict = {"ridge": make_pipeline(StandardScaler(), Ridge()),
+                  "random_forest": make_pipeline(StandardScaler(), RandomForestRegressor(random_state=33)),
+                  "neural_network": make_pipeline(StandardScaler(), MLPRegressor(max_iter=2000, random_state=33)),
+                  "kNN": make_pipeline(StandardScaler(), KNeighborsRegressor()),
+                  "gaussian_process": make_pipeline(StandardScaler(), GaussianProcessRegressor(kernel=RBF() + WhiteKernel(), normalize_y=True, random_state=33)),
+                  "xgboost": make_pipeline(StandardScaler(), XGBRegressor(random_state=33)),
+                  "tabpfn": make_pipeline(StandardScaler(), TabPFNRegressor(random_state=33))
+                }
+    return model_dict
+
+
+
+
+# --- Format data for model testing --- #
+df = pd.read_csv("data/rated_data.csv")
+df = df.dropna(subset=["WVHT_ft", "rating"])
+df.reset_index(drop=True, inplace=True)
+
+
+df["MWD"] = df["MWD"].map({
+                  "Best": 3,
+                  "Second best": 2,
+                  "Average": 1,
+                  "Second worst": 0
+                 })
+
+x = df[["WVHT_ft", "DPD", "APD", "MWD", "tide_ft", "wind_offshore", "wind_cross"]]
+y = df["rating"]
+
+
+
+print(average(y))
+# ------------------------------------- #
+
+
+"""
+Tests and evaluates a model
+"""
+def evaluate(model, X: pd.DataFrame, y: pd.Series):
+    return "hi"
+
+
+
+
+
+# --- Running evaluate function on each model and displaying results --- #
+
+for name, model in make_models().items():
+    print(evaluate(model, x, y))
