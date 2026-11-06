@@ -1,14 +1,11 @@
 from data_collection import *
 
-import pandas as pd
-import numpy as np
-import random
-
-
 from sklearn.model_selection import RepeatedKFold, cross_val_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import learning_curve
 # Models being used:
+from tabpfn import TabPFNRegressor
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel
 from sklearn.linear_model import Ridge
 from sklearn.ensemble import RandomForestRegressor
@@ -16,7 +13,17 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
 from xgboost import XGBRegressor
-from tabpfn import TabPFNRegressor
+
+import pandas as pd
+import numpy as np
+import random
+import json
+
+
+import warnings
+from sklearn.exceptions import ConvergenceWarning
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
+
 
 DATA = make_stuff_easy(load_data())
 
@@ -115,17 +122,63 @@ print(average(y))
 # ------------------------------------- #
 
 
+CLEAN_PATH = Path("data/model_results.json")
 """
-Tests and evaluates a model
+Tests and evaluates a model for its full data set
 """
 def evaluate(model, X: pd.DataFrame, y: pd.Series):
-    return "hi"
+    cv = RepeatedKFold(n_splits=10, n_repeats=5, random_state=33)
+    scores = cross_val_score(model, X, y, cv=cv, scoring="neg_mean_absolute_error")
+
+    return float(-scores.mean()), float(scores.std())
+
+
+"""
+Evaluates model at different input sizes
+"""
+def split(model, X: pd.DataFrame, y: pd.Series, input_sizes):
+    cv = RepeatedKFold(n_splits=10, n_repeats=5, random_state=33)
+
+    sizes, _, test_scores = learning_curve(model, X, y, train_sizes=input_sizes, cv=cv, scoring="neg_mean_absolute_error")
+
+    return sizes, -test_scores.mean(axis=1), test_scores.std(axis=1)
+
 
 
 
 
 
 # --- Running evaluate function on each model and displaying results --- #
+def run_stuff():
+    results = {}
+    for name, model in make_models().items():
+        results[name] = evaluate(model, x, y)
+        print(f'The {name} model produced a standard error and S.D. of {results[name]}')
 
-for name, model in make_models().items():
-    print(evaluate(model, x, y))
+
+
+    curves = {}
+    for name, model in make_models().items():
+        curves[name] = split(model, x, y, [10, 25, 50, 75, 100, 150])
+        print(f'The {name} model produced {curves[name]}')
+
+
+    out = {
+    "overall": {n: list(map(float, r)) for n, r in results.items()},          # [mae, sd]
+    "curves": {n: {"sizes": list(map(int, s)), "mae": list(map(float, m)), "sd": list(map(float, sd))}
+           for n, (s, m, sd) in curves.items()},
+}
+    json.dump(out, open("data/model_results.json", "w"), indent=2)
+
+    return results, curves
+
+if not CLEAN_PATH.exists():
+    run_stuff()
+
+
+
+
+
+
+
+# OMP_NUM_THREADS=1 caffeinate -i python3 src/models.py

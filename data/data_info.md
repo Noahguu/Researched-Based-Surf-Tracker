@@ -45,8 +45,3 @@
 - Wind speed
 - Wind direction
 - Literally all the python code needed to collect the data so I dont even need an example data set to parse it I can just use their provided code!
-
-
-
-# Missing:
-- *** Surf ratings *** (Possibly use conditions and wave size, then have user input their ideal combo and it checks how good it is      comp to that in order to form score out of 10)
